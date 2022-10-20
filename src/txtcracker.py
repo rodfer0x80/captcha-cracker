@@ -1,10 +1,12 @@
 import hashlib
 import time
 import os
+from operator import itemgetter
 
 from PIL import Image
 
 from .vectorspace import *
+
 
 class TxtCracker:
     def __init__(self):
@@ -36,13 +38,29 @@ class TxtCracker:
         im = Image.open(f"{self.data}/captcha.gif")
         im2 = Image.new("P",im.size,255)
         im = im.convert("P")
-        temp = {}
 
+        hist = im.histogram()
+        values = {}
+        for i in range(256):
+            values[i] = hist[i]
+        colours = sorted(values.items(), key=itemgetter(1), reverse=True)[:10]
+        print(colours)
+        txt1 = colours[1][0] if colours[1][0] != 0 else colours[2][0]
+        txt2 = txt1
+        diff = 999999
+        for colour,qty in colours:
+            df = abs(txt1 - colour)
+            if df < diff and df > 0:
+                diff = df
+                txt2 = colour
+        temp = {}
+        print(txt1,txt2)
+        exit(0)
         for x in range(im.size[1]):
             for y in range(im.size[0]):
                 pix = im.getpixel((y,x))
                 temp[pix] = pix
-                if pix == 220 or pix == 227: # these are the numbers to get
+                if pix == txt1 or pix == txt2: # these are the numbers to get
                     im2.putpixel((y,x),0)
 
         inletter = False
